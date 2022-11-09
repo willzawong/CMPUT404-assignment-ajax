@@ -56,7 +56,8 @@ class ServerTestCase(unittest.TestCase):
         self.assertTrue(r.status_code == 200, "Code not 200!")
         self.assertTrue(json.dumps(json.loads(utf8(r.data))) == json.dumps(json.loads('{}')), "Not empty? %s" % utf8(r.data))
         d = {'x':2, 'y':3}
-        r = self.app.put(('/entity/%s' % v),data=json.dumps(d))
+        headers = {'content-type':'application/json'}
+        r = self.app.put(('/entity/%s' % v),headers=headers, data=json.dumps(d))
         self.assertTrue(r.status_code == 200, "PUT Code not 200!")
         rd = json.loads(utf8(r.data))
         for key in d:
@@ -81,8 +82,9 @@ class ServerTestCase(unittest.TestCase):
         r = self.app.post('/clear')
         self.assertTrue(r.status_code == 200, "Code not 200!")
         for key in self.world:
-            print("data=\n",json.dumps(self.world[key]))
+            headers = {'content-type':'application/json'}
             r = self.app.put(('/entity/%s' % key),
+                             headers=headers,
                              data=json.dumps(self.world[key]))
             self.assertTrue(r.status_code == 200, "Code not 200!")
             j = json.loads(utf8(r.data))

@@ -25,32 +25,26 @@
   <body bgcolor="black" height="100%" width="100%"> 
     <canvas id="c" width="100%" height="100%" style="-webkit-tap-highlight-color: transparent;"></canvas> 
     <script>
+// REFERENCES are in line, and some code is taken from the CMPUT404 JAVASCRIPT and AJAX slides.
 var canvas = document.getElementById('c');
 var host = window.location.host;
 var context = canvas.getContext("2d");
 var W = canvas.width  = window.innerWidth-6;
 var H = canvas.height = window.innerHeight-50;
 
-
-function sendJSONXMLHTTPRequest(url, objects, callback) {
-    var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState==4) {
-            try {
-                if (xhr.status==200) {
-                    //XXX: parse some JSON from the request!
-                    //XXX: Pass the data to the callback!
-                    console.log(xhr.responseText)
-                }
-            } 
-            catch(e) {
-                alert('Error: ' + e.name);
-            }
+function sendRequest(url,objects,callback) {
+    var request = new Request(url);
+    fetch(request).then(function(response) {
+        return response.json();
+    }).then(function(blob) {
+        // https://stackoverflow.com/a/6072687
+        if(Object.keys(world).length===0) {
+            world = blob;
+            drawNextFrame();
+        } else {
+            world=blob;
         }
-    };
-    //XXX: POST to a URL
-    //XXX: set the mimetype and the accept headers!
-    // Remember to use application/json !
+    })
 }
 
 
@@ -66,17 +60,19 @@ function drawCircle(context,entity) {
         //moveTo(x,y);
         fillStyle = entity["colour"];
         strokeStyle = fillStyle;
-        arc(x, y, (entity["radius"])?entity["radius"]:50, 0, 2.0 * Math.PI, false);  
-        stroke();                                
+        // https://www.w3schools.com/js/js_random.asp
+        var deviation = Math.floor((Math.random() * 10));
+        arc(x, y, (entity["radius"])?entity["radius"]+(deviation):20, 0, 2.0 * Math.PI, false);  
+        context.fill();
     }
 }
 
 function prepEntity(entity) {
     if (!entity["colour"]) {
-        entity["colour"] = "#FF0000";
+        entity["colour"] = "#ff9a00";
     }
     if (!entity["radius"]) {
-        entity["radius"] = 50;
+        entity["radius"] = 30;
     }
     return entity;
 }
@@ -137,9 +133,18 @@ function getPosition(e) {
 
 function addEntity(entity, data) {
     world[entity] = data;
-    drawNextFrame(); // (but should we?)
     //XXX: Send a XHTML Request that updates the entity you just  modified!
-    var httpRequest = new XMLHttpRequest();
+    var req = new XMLHttpRequest();
+    // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/
+    req.open("PUT","/entity/"+entity);
+    req.setRequestHeader("Content-Type","application/json;charset=UTF-8");
+    // https://stackoverflow.com/a/13488998
+    var newEntity = new Object();
+    newEntity.x = data.x;
+    newEntity.y = data.y;
+    newEntity.colour = data.colour;
+    newEntity.radius = data.radius;
+    req.send(JSON.stringify(newEntity));
 }
 
 var counter = 0;
@@ -248,27 +253,28 @@ mouse = (function() {
 // Add the application specific mouse listeners!
 //XXX: TODO Make these prettier!
 mouse.mousedowners.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'blue'});
+    addEntityWithoutName({'x':x,'y':y,'colour':'dark-blue'});
 });
 
 mouse.mouseuppers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'red'});
+    addEntityWithoutName({'x':x,'y':y,'colour':'blue'});
 });
 
 mouse.mousedraggers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'green',
-                          'radius':10});
+    addEntityWithoutName({'x':x,'y':y,'colour':'light-blue',
+                          'radius':30});
 });
 
 
 function update() {
     //XXX: TODO Get the world from the webservice using a XMLHTTPRequest
-    sendJSONXMLHTTPRequest("/world",NULL, NULL);
     drawFrame();
+    drawNextFrame(); // (but should we?)
+    sendRequest("/world",null, null);
 }
 
 // 30 frames per second
-setInterval( update, 1000/30.0);
+setInterval( update, 1000/50.0);
 
 
 

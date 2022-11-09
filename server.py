@@ -106,11 +106,21 @@ def hello():
 def update(entity):
     '''update the entities via this interface'''
     # https://stackoverflow.com/a/51932419
+    returner = {"status":200,"mimetype":'application/json'}
     if(request.method == 'PUT'):
-        requestJSON = parsePUT(request.data.decode("utf8")) 
+        requestJSON = flask_post_json()
         for key in requestJSON:
             myWorld.update(entity, key, requestJSON[key])
-    return jsonify(success=True)
+            returner[key] = requestJSON[key]
+    elif(request.method == 'POST'):
+        # not sure what to do
+        requestJSON = flask_post_json()
+        for key in requestJSON:
+            print(key)
+            myWorld.update(entity, key, requestJSON[key])
+    else:
+        return None
+    return returner
 
 @app.route("/world", methods=['POST','GET'])    
 def world():
@@ -127,7 +137,7 @@ def get_entity(entity):
 def clear():
     '''Clear the world out!'''
     myWorld.clear()
-    return HTTPStatus(200).phrase
+    return myWorld.world()
 
 if __name__ == "__main__":
     app.run()
