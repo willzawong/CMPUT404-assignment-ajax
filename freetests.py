@@ -81,6 +81,7 @@ class ServerTestCase(unittest.TestCase):
         r = self.app.post('/clear')
         self.assertTrue(r.status_code == 200, "Code not 200!")
         for key in self.world:
+            print("data=\n",json.dumps(self.world[key]))
             r = self.app.put(('/entity/%s' % key),
                              data=json.dumps(self.world[key]))
             self.assertTrue(r.status_code == 200, "Code not 200!")

@@ -21,9 +21,10 @@
 #     pip install flask
 
 
-import flask
-from flask import Flask, request
+from http import HTTPStatus
+from flask import Flask, Response, request, redirect, jsonify
 import json
+import sys
 app = Flask(__name__)
 app.debug = True
 
@@ -71,30 +72,62 @@ def flask_post_json():
     else:
         return json.loads(request.form.keys()[0])
 
+def parsePUT(responseString):
+    responseString = responseString[2:]
+    stack = []
+    builder = ""
+    for char in responseString:
+        if char == ':' or char == ',' or char == '}':
+            stack.append(builder)
+            builder = ""
+        else:
+            builder += char
+    alt = 1
+    builder = "{"
+    for string in stack:
+        if(alt):
+            builder += '"' + string + '":'
+            alt = 0
+        else:
+            alt = 1
+            builder += string + ","
+            
+    builder = builder[:-1]+"}"
+    print(builder, file=sys.stdout)
+    return json.loads(builder)  
+
 @app.route("/")
 def hello():
     '''Return something coherent here.. perhaps redirect to /static/index.html '''
-    return None
+    # https://stackoverflow.com/a/14343957
+    return redirect("/static/index.html", code=302)
 
 @app.route("/entity/<entity>", methods=['POST','PUT'])
 def update(entity):
     '''update the entities via this interface'''
-    return None
+    # https://stackoverflow.com/a/51932419
+    if(request.method == 'PUT'):
+        requestJSON = parsePUT(request.data.decode("utf8")) 
+        for key in requestJSON:
+            myWorld.update(entity, key, requestJSON[key])
+    return jsonify(success=True)
 
 @app.route("/world", methods=['POST','GET'])    
 def world():
     '''you should probably return the world here'''
-    return None
+    return myWorld.world()
 
 @app.route("/entity/<entity>")    
 def get_entity(entity):
     '''This is the GET version of the entity interface, return a representation of the entity'''
-    return None
+
+    return myWorld.get(entity)
 
 @app.route("/clear", methods=['POST','GET'])
 def clear():
     '''Clear the world out!'''
-    return None
+    myWorld.clear()
+    return HTTPStatus(200).phrase
 
 if __name__ == "__main__":
     app.run()

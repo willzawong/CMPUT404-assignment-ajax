@@ -40,6 +40,7 @@ function sendJSONXMLHTTPRequest(url, objects, callback) {
                 if (xhr.status==200) {
                     //XXX: parse some JSON from the request!
                     //XXX: Pass the data to the callback!
+                    console.log(xhr.responseText)
                 }
             } 
             catch(e) {
@@ -114,7 +115,7 @@ function drawFrame() {
     }
 }
 
-// This is unpleasent, canvas clicks are not handled well
+// This is unpleasant, canvas clicks are not handled well
 // So use this code, it works well on multitouch devices as well.
 
 function getPosition(e) {
@@ -138,7 +139,7 @@ function addEntity(entity, data) {
     world[entity] = data;
     drawNextFrame(); // (but should we?)
     //XXX: Send a XHTML Request that updates the entity you just  modified!
-
+    var httpRequest = new XMLHttpRequest();
 }
 
 var counter = 0;
@@ -262,6 +263,7 @@ mouse.mousedraggers.push(function(x,y,clicked,e) {
 
 function update() {
     //XXX: TODO Get the world from the webservice using a XMLHTTPRequest
+    sendJSONXMLHTTPRequest("/world",NULL, NULL);
     drawFrame();
 }
 
